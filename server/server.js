@@ -24,20 +24,54 @@ app.get('/api', async (req, res) => {
   }
 })
 
-
-app.get('/api/:name', async (req, res) => {
+app.get('/api/:name/:input', async (req, res) => {
   try {
-    const { name } = req.params;
-    console.log(name, ' selected');
+    const { name, input } = req.params;
 
-    const alienLanguageIdQuery = await pool.query('SELECT id FROM AlienLanguage WHERE language_name = $1', [name]);
-    const alien_language_id = alienLanguageIdQuery.rows[0].id;
+    // Retrieve AlienLanguage ID
+    const languageResult = await pool.query('SELECT id FROM AlienLanguage WHERE language_name = $1', [name]);
 
-    const result = await pool.query('SELECT letter FROM alienletter WHERE alien_language_id = $1', [alien_language_id]);
+    if (languageResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Language not found' });
+    }
 
-    res.json({ message: result.rows });
+    const language_id = languageResult.rows[0].id;
+
+    // Convert input to uppercase and create an array
+    const arrayInput = Array.from(input.toUpperCase());
+
+    // Secure Alien letters for each English letter in the array
+    const alienLetters = await Promise.all(
+      arrayInput.map(async (character) => {
+        const englishLetterResult = await pool.query(
+          'SELECT id FROM EnglishLetter WHERE letter = $1',
+          [character]
+        );
+
+        if (englishLetterResult.rows.length === 0) {
+          return null; // You may handle the case when the English letter is not found
+        }
+
+        const englishLetterInfo = englishLetterResult.rows[0];
+
+        // Fetch Alien letter based on English letter ID and AlienLanguage ID
+        const alienLetterResult = await pool.query(
+          'SELECT letter FROM AlienLetter WHERE english_letter_id = $1 AND alien_language_id = $2',
+          [englishLetterInfo.id, language_id]
+        );
+
+        if (alienLetterResult.rows.length === 0) {
+          return null; // You may handle the case when the Alien letter is not found
+        }
+
+        return alienLetterResult.rows[0].letter;
+      })
+    );
+    let response = alienLetters.join('')
+    res.json({ response });
+
   } catch (error) {
-    console.error('Error in /api/:name route:', error);
+    console.error('Error on request', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });

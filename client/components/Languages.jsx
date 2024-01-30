@@ -1,14 +1,12 @@
-import LanguageOptions from "./LanguageOptions.jsx"
 import React from "react";
+import LanguageOptions from "./LanguageOptions.jsx";
 
-export default function Languages(props) {
-    console.log('Languages props: ', props)
-    return (
-        <>
-            <div className = 'parentAlienImages'>
-                <LanguageOptions />
-            </div>
-        </>
-    )
+export default function Languages({ setLanguage }) {
+  return (
+    <>
+      <div className="parentAlienImages">
+        <LanguageOptions setLanguage={setLanguage} />
+      </div>
+    </>
+  );
 }
-
