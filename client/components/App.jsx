@@ -1,27 +1,14 @@
-import React, { useEffect, useState } from "react";
+import Languages from './Languages.jsx'
+import Input from './input.jsx'
+import React from 'react';
 
-const App = () => {
-
-  const [message, setMessage] = useState('')
-  const [isAlive, setAlive] = useState(true)
-  
-  useEffect(() => { //USED FOR API CALLS
-    async function fetchData() {
-      try {
-        const response = await fetch('/api');
-        const newMessage = await response.json()
-        setMessage(newMessage.message)
-      } catch (error) {
-        console.error('Error on fetch: ', error)
-      }
-    }
-  fetchData()
-
-  }, [isAlive]);
-
+const App = (props) => {
+  // console.log('App props: ',props)
   return (
     <>
-      <div> {message} </div>
+      <h1 id = 'currentLanguage'> Language: {props.key}</h1>
+      <Languages />
+      <Input />
     </>
   );
 };
